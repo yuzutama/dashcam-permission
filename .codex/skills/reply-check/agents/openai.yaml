@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reply Check"
+  short_description: "Run npm run check and summarize reply results."
+  default_prompt: "Use $reply-check to run npm run check in the dashcam-permission project and summarize detected replies."

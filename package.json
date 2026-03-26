@@ -1,0 +1,24 @@
+{
+  "name": "dashcam-permission",
+  "version": "1.0.0",
+  "description": "ドラレコ動画の使用許可取り自動化ツール（ローカル完結版）",
+  "type": "module",
+  "scripts": {
+    "dev": "node server/app.mjs",
+    "fetch": "node scripts/fetch-targets.mjs",
+    "send": "node scripts/send-permission.mjs",
+    "check": "node scripts/check-replies.mjs",
+    "backfill:reply-ids": "node scripts/backfill-reply-ids.mjs",
+    "profiles": "node scripts/backfill-profiles.mjs",
+    "analyze": "node scripts/analyze-videos.mjs",
+    "analyze:all": "node scripts/analyze-videos.mjs --all",
+    "export": "node scripts/export-approved.mjs",
+    "db:init": "node lib/db.mjs init"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "twitter-api-v2": "^1.18.2"
+  }
+}
