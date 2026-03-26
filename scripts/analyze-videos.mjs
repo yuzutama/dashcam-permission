@@ -4,12 +4,12 @@
  * ffmpegでフレーム抽出 → claude CLIでカテゴリ等を判定 → DB書き込み
  */
 
-import { execSync } from "child_process";
 import { mkdtempSync, rmSync, readdirSync } from "fs";
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { tmpdir } from "os";
 import db from "../lib/db.mjs";
+import { runCommand } from "../lib/command-runner.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = resolve(__dirname, "../data");
@@ -34,19 +34,35 @@ function extractFrames(videoPath, count = 5) {
 
   // 動画の長さを取得
   const duration = parseFloat(
-    execSync(
-      `ffprobe -v error -show_entries format=duration -of csv=p=0 "${fullPath}"`,
-      { encoding: "utf-8" }
-    ).trim()
+    runCommand("ffprobe", [
+      "-v",
+      "error",
+      "-show_entries",
+      "format=duration",
+      "-of",
+      "csv=p=0",
+      fullPath,
+    ]).stdout.trim()
   );
 
   // 等間隔にフレーム抽出
   const interval = duration / (count + 1);
   for (let i = 1; i <= count; i++) {
     const time = (interval * i).toFixed(2);
-    execSync(
-      `ffmpeg -y -ss ${time} -i "${fullPath}" -frames:v 1 -q:v 2 "${tmpDir}/frame_${i}.jpg" 2>/dev/null`
-    );
+    runCommand("ffmpeg", [
+      "-y",
+      "-ss",
+      time,
+      "-i",
+      fullPath,
+      "-frames:v",
+      "1",
+      "-q:v",
+      "2",
+      `${tmpDir}/frame_${i}.jpg`,
+    ], {
+      stdio: "pipe",
+    });
   }
 
   const frames = readdirSync(tmpDir)
@@ -75,10 +91,10 @@ function analyzeWithClaude(frames) {
 場所選択肢: 交差点, 高速道路, 一般道, 住宅街, 駐車場, 細い道, 合流地点, カーブ
 天候/時間帯選択肢: 晴れ, 曇り, 雨, 雪, 夜間, 夕方, 朝`;
 
-  const result = execSync(
-    `cat ${fileArgs} | claude -p ${JSON.stringify(prompt)} ${fileArgs}`,
-    { encoding: "utf-8", timeout: 120000, maxBuffer: 10 * 1024 * 1024 }
-  );
+  const result = runCommand(process.env.CLAUDE_BIN || "claude", ["-p", prompt, ...frames], {
+    timeout: 120000,
+    maxBuffer: 10 * 1024 * 1024,
+  }).stdout;
 
   // JSONを抽出
   const jsonMatch = result.match(/\{[\s\S]*\}/);

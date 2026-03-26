@@ -7,10 +7,10 @@
 import { roClient } from "../lib/twitter-client.mjs";
 import db from "../lib/db.mjs";
 import { getDashboardSettings } from "../lib/app-settings.mjs";
-import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { runCommand } from "../lib/command-runner.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const VIDEOS_DIR = resolve(__dirname, "../data/videos");
@@ -113,10 +113,15 @@ function downloadVideo(tweetUrl, tweetId) {
   }
 
   try {
-    execSync(
-      `yt-dlp -o "${outputPath}" --no-warnings "${tweetUrl}"`,
-      { stdio: "pipe", timeout: 120000 }
-    );
+    runCommand("yt-dlp", [
+      "-o",
+      outputPath,
+      "--no-warnings",
+      tweetUrl,
+    ], {
+      stdio: "pipe",
+      timeout: 120000,
+    });
     console.log(`    動画DL完了: ${tweetId}`);
     return outputPath;
   } catch (e) {

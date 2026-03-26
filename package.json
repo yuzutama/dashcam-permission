@@ -4,6 +4,7 @@
   "description": "ドラレコ動画の使用許可取り自動化ツール（ローカル完結版）",
   "type": "module",
   "scripts": {
+    "doctor": "node scripts/doctor.mjs",
     "dev": "node server/app.mjs",
     "fetch": "node scripts/fetch-targets.mjs",
     "send": "node scripts/send-permission.mjs",

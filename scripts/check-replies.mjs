@@ -3,7 +3,7 @@
  * 送信済みリプライへの返信を監視し、DBのステータスを更新するスクリプト
  */
 
-import { execFileSync, execSync } from "child_process";
+import { execSync } from "child_process";
 import { mkdtempSync, readFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { dirname, resolve } from "path";
@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 import { roClient } from "../lib/twitter-client.mjs";
 import db from "../lib/db.mjs";
 import { getDashboardSettings } from "../lib/app-settings.mjs";
+import { runCommand } from "../lib/command-runner.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,18 +30,8 @@ function normalizeLabel(label) {
   return null;
 }
 
-function resolveCliPath(envName, defaultName) {
-  if (process.env[envName]) return process.env[envName];
-
-  try {
-    return execFileSync("which", [defaultName], { encoding: "utf8" }).trim();
-  } catch (error) {
-    return defaultName;
-  }
-}
-
-const CODEX_BIN = resolveCliPath("CODEX_BIN", "codex");
-const CLAUDE_BIN = resolveCliPath("CLAUDE_BIN", "claude");
+const CODEX_BIN = process.env.CODEX_BIN || "codex";
+const CLAUDE_BIN = process.env.CLAUDE_BIN || "claude";
 
 function classifyWithCodex(text) {
   const tempDir = mkdtempSync(resolve(tmpdir(), "dashcam-codex-"));
@@ -57,7 +48,7 @@ function classifyWithCodex(text) {
   ].join("\n");
 
   try {
-    execFileSync(CODEX_BIN, [
+    runCommand(CODEX_BIN, [
       "exec",
       "--skip-git-repo-check",
       "--sandbox",
@@ -68,7 +59,6 @@ function classifyWithCodex(text) {
     ], {
       stdio: "pipe",
       timeout: 120000,
-      encoding: "utf8",
     });
     return normalizeLabel(readFileSync(outputPath, "utf8"));
   } catch (error) {
@@ -87,12 +77,11 @@ function classifyWithClaude(text) {
   ].join("\n");
 
   try {
-    const result = execFileSync(CLAUDE_BIN, ["-p", prompt], {
+    const result = runCommand(CLAUDE_BIN, ["-p", prompt], {
       stdio: "pipe",
       timeout: 120000,
-      encoding: "utf8",
     });
-    return normalizeLabel(result);
+    return normalizeLabel(result.stdout);
   } catch (error) {
     return null;
   }
