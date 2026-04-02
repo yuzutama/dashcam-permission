@@ -1085,6 +1085,10 @@ README を読んでセットアップして。
 
 </div>
 
+---
+
+## AI に頼むときの3要素
+
 <div class="two-columns">
 <div class="column">
 
@@ -1104,6 +1108,12 @@ README を読んでセットアップして。
 - `最後に実行コマンドを一覧で教えて`
 
 </div>
+</div>
+
+<div class="highlight-box">
+
+**この3つを意識するだけで、AI の出力品質が大きく変わる。**
+
 </div>
 
 ---
